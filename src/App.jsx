@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import './App.css';
 import { Layout } from './components/Layout';
 import { Dashboard } from './components/Dashboard';
 import { School } from './components/School';
@@ -7,48 +8,39 @@ import { Planner } from './components/Planner';
 import { Health } from './components/Health';
 import { Goals } from './components/Goals';
 import { CalendarView } from './components/CalendarView';
+import { Agenda } from './components/Agenda';
+import { AuthScreen } from './components/AuthScreen';
+import { AiAssistant } from './components/AiAssistant';
+import { useAuth } from './contexts/AuthContext';
 
 function App() {
-  const [activeTab, setActiveTab] = useState('dashboard');
+    const { currentUser } = useAuth();
+    const [activeTab, setActiveTab] = useState('dashboard');
 
-  // Helper to read data for Dashboard summary (simulating global state via LS)
-  const getDashboardData = () => {
-    const health = JSON.parse(localStorage.getItem('health_tracker') || '{}');
-    const ferreto = JSON.parse(localStorage.getItem('ferreto_progress') || '[]');
-    return { health, ferreto };
-  };
-
-  const dashboardData = getDashboardData();
-
-  const renderContent = () => {
-    switch (activeTab) {
-      case 'dashboard':
-        return <Dashboard
-          healthData={dashboardData.health}
-          ferretoProgress={dashboardData.ferreto}
-        />;
-      case 'school':
-        return <School />;
-      case 'courses':
-        return <Courses />;
-      case 'planner':
-        return <Planner />;
-      case 'calendar':
-        return <CalendarView />;
-      case 'health':
-        return <Health />;
-      case 'goals':
-        return <Goals />;
-      default:
-        return <Dashboard />;
+    if (!currentUser) {
+        return <AuthScreen />;
     }
-  };
 
-  return (
-    <Layout activeTab={activeTab} setActiveTab={setActiveTab}>
-      {renderContent()}
-    </Layout>
-  );
+    const renderContent = () => {
+        switch (activeTab) {
+            case 'dashboard': return <Dashboard />;
+            case 'school':    return <School />;
+            case 'courses':   return <Courses />;
+            case 'agenda':    return <Agenda />;
+            case 'planner':   return <Planner />;
+            case 'calendar':  return <CalendarView />;
+            case 'health':    return <Health />;
+            case 'goals':     return <Goals />;
+            case 'ai':        return <AiAssistant />;
+            default:          return <Dashboard />;
+        }
+    };
+
+    return (
+        <Layout activeTab={activeTab} setActiveTab={setActiveTab}>
+            {renderContent()}
+        </Layout>
+    );
 }
 
 export default App;

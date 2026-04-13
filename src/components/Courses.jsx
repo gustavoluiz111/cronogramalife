@@ -1,239 +1,237 @@
-import React, { useState, useEffect } from 'react';
-import { BookOpen, Video, MapPin, Code } from 'lucide-react';
+import React, { useState } from 'react';
+import { BookOpen, Video, MapPin, Code, ExternalLink, Edit3, Plus, Trash2, TrendingUp, Layout as LayoutIcon } from 'lucide-react';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 
+// ─── Ferreto Data ───
 const FERRETO_WEEKS = [
-    { week: 1, total: 53 }, { week: 2, total: 76 }, { week: 3, total: 72 },
-    { week: 4, total: 66 }, { week: 5, total: 69 }, { week: 6, total: 62 },
-    { week: 7, total: 76 }, { week: 8, total: 78 }, { week: 9, total: 77 },
-    { week: 10, total: 73 }, { week: 11, total: 80 }, { week: 12, total: 68 },
-    { week: 13, total: 75 }, { week: 14, total: 75 }, { week: 15, total: 70 },
-    { week: 16, total: 75 }, { week: 17, total: 65 }, { week: 18, total: 58 },
-    { week: 19, total: 70 }, { week: 20, total: 67 }, { week: 21, total: 77 },
-    { week: 22, total: 88 }, { week: 23, total: 68 }, { week: 24, total: 83 },
-    { week: 25, total: 80 }, { week: 26, total: 66 }, { week: 27, total: 71 },
-    { week: 28, total: 70 }, { week: 29, total: 61 }, { week: 30, total: 76 },
-    { week: 31, total: 39 }
+    { week: 1, total: 53 }, { week: 2, total: 76 }, { week: 3, total: 72 }, { week: 4, total: 66 },
+    { week: 5, total: 69 }, { week: 6, total: 62 }, { week: 7, total: 76 }, { week: 8, total: 78 },
 ];
 
-const OTHER_COURSES = [
-    { name: 'Fernanda Pessoa', desc: 'Complementar Teórico (ENEM)', icon: BookOpen, category: 'preparatorio' },
-    { name: 'Redação - Vanilma Carla', desc: 'Sex 19h-20h30 (EAD + Prática)', icon: Video, category: 'preparatorio' },
-    { name: 'Algoritmo', desc: 'Sáb 08h-16h (Presencial não-feriado)', icon: MapPin, category: 'preparatorio' },
+const TECH_COURSES = [
+    { name: 'FGV — IA e Ciência de Dados', desc: '216 cursos gratuitos', url: 'https://educacao-executiva.fgv.br/cursos/online', cert: 'FGV' },
+    { name: 'Lúmina UFRGS', desc: 'MOOCs em Tecnologia', url: 'https://lumina.ufrgs.br', cert: 'UFRGS' },
 ];
 
-const TECH_COURSES_RECOMMENDED = [
-    {
-        name: 'FGV - IA e Ciência de Dados',
-        desc: '216 cursos gratuitos com certificado',
-        url: 'https://educacao-executiva.fgv.br/cursos/online',
-        icon: Code,
-        value: '⭐ Gratuito + Certificado FGV'
-    },
-    {
-        name: 'Lúmina UFRGS - Saúde Digital',
-        desc: 'MOOCs em Ciências da Saúde e Tecnologia',
-        url: 'https://lumina.ufrgs.br',
-        icon: Code,
-        value: '⭐ Gratuito + Certificado UFRGS'
-    },
-    {
-        name: 'Fiocruz - IA na Saúde',
-        desc: 'IA e futuro dos sistemas de saúde + Análise de dados SUS',
-        url: 'https://www.ead.fiocruz.br',
-        icon: Code,
-        value: '⭐ Gratuito + Certificado Fiocruz'
-    },
-    {
-        name: 'Educa e-SUS (UFMG)',
-        desc: 'Saúde Digital - Recursos digitais no cuidado',
-        url: 'https://www.ufmg.br/ead',
-        icon: Code,
-        value: '⭐ Gratuito + Certificado UFMG'
-    },
-    {
-        name: 'Santander + Alura - IA',
-        desc: 'Skills do Futuro, Análise de Dados e IA',
-        url: 'https://app.santanderopenacademy.com',
-        icon: Code,
-        value: '⭐ Gratuito + Certificado'
-    },
-    {
-        name: 'Portal Cate SP - TI e IA',
-        desc: 'Introdução à TI e Fluência em IA',
-        url: 'https://cate.prefeitura.sp.gov.br',
-        icon: Code,
-        value: '⭐ Gratuito + Certificado'
-    },
-    {
-        name: 'Fundação Bradesco - Office',
-        desc: 'Excel, Word, PowerPoint (Essencial)',
-        url: 'https://www.ev.org.br',
-        icon: Code,
-        value: '⭐ Gratuito'
-    },
-    {
-        name: 'Google Ateliê Digital',
-        desc: 'Marketing Digital e Análise de Dados',
-        url: 'https://learndigital.withgoogle.com/ateliedigital',
-        icon: Code,
-        value: '⭐ Gratuito + Certificado Google'
-    },
-    {
-        name: 'IBM SkillsBuild',
-        desc: 'Cloud, IA, Cibersegurança',
-        url: 'https://skillsbuild.org',
-        icon: Code,
-        value: '⭐ Gratuito + Certificado IBM'
-    },
-    {
-        name: 'FIAP - Python',
-        desc: 'Programação Python para iniciantes',
-        url: 'https://www.fiap.com.br',
-        icon: Code,
-        value: '💰 Pago (Bom custo-benefício)'
-    },
-    {
-        name: 'Microsoft Learn',
-        desc: 'Azure, Power BI, IA',
-        url: 'https://learn.microsoft.com/pt-br',
-        icon: Code,
-        value: '⭐ Gratuito + Certificados Microsoft'
-    },
-];
+// ─── REDAÇÃO MANAGER ───
+const RedacaoManager = () => {
+    const [redacoes, setRedacoes] = useLocalStorage('agenda_redacoes', []);
+    const [isFormOpen, setIsFormOpen] = useState(false);
+    const [form, setForm] = useState({ tema: '', status: 'pendente', nota: '', introducao: '' });
+
+    const addRedacao = () => {
+        if (!form.tema.trim()) return;
+        setRedacoes([...redacoes, { id: Date.now(), ...form, nota: parseFloat(form.nota) || null, data: new Date().toISOString() }]);
+        setForm({ tema: '', status: 'pendente', nota: '', introducao: '' });
+        setIsFormOpen(false);
+    };
+
+    const removeRedacao = (id) => {
+        if(window.confirm('Apagar redação?')) setRedacoes(redacoes.filter(r => r.id !== id));
+    };
+
+    const editStatus = (id, newStatus) => {
+        setRedacoes(redacoes.map(r => r.id === id ? { ...r, status: newStatus } : r));
+    };
+
+    const concluidas = redacoes.filter(r => r.status === 'concluída' && r.nota !== null);
+    const notas = concluidas.map(r => r.nota);
+    const media = notas.length > 0 ? (notas.reduce((a,b)=>a+b,0) / notas.length).toFixed(1) : 0;
+    const maxNota = notas.length > 0 ? Math.max(...notas) : 0;
+
+    return (
+        <div className="card mb-4" style={{ border: '1px solid rgba(10,30,80,0.5)' }}>
+            <div className="flex justify-between items-center mb-4">
+                <h2 className="section-title" style={{ margin: 0, color: 'var(--accent)' }}><Edit3 size={20} /> Laboratório de Redação</h2>
+                <button className="btn btn-primary btn-sm" onClick={() => setIsFormOpen(!isFormOpen)}>
+                    {isFormOpen ? 'Fechar' : <><Plus size={16}/> Nova Redação</>}
+                </button>
+            </div>
+
+            {isFormOpen && (
+                <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem', border: '1px solid rgba(255,255,255,0.1)' }}>
+                    <div className="grid grid-2" style={{ gap: '1rem' }}>
+                        <div className="input-group" style={{ margin: 0 }}>
+                            <label>Tema da Redação</label>
+                            <input type="text" placeholder="Ex: Caminhos para combater a intolerância..." value={form.tema} onChange={e => setForm({...form, tema: e.target.value})} />
+                        </div>
+                        <div className="input-group" style={{ margin: 0 }}>
+                            <label>Status</label>
+                            <select value={form.status} onChange={e => setForm({...form, status: e.target.value})}>
+                                <option value="pendente">Pendente / Para Fazer</option>
+                                <option value="concluída">Concluída / Corrigida</option>
+                            </select>
+                        </div>
+                        {form.status === 'concluída' && (
+                            <div className="input-group" style={{ margin: 0 }}>
+                                <label>Nota (0 a 1000)</label>
+                                <input type="number" min="0" max="1000" step="10" placeholder="Ex: 920" value={form.nota} onChange={e => setForm({...form, nota: e.target.value})} />
+                            </div>
+                        )}
+                        <div className="input-group" style={{ gridColumn: '1 / -1', margin: 0 }}>
+                            <label>Modelo de Introdução / Repertório Utilizado (Opcional)</label>
+                            <textarea rows="2" placeholder="Ex: Na obra 'Utopia' de Thomas More..." value={form.introducao} onChange={e => setForm({...form, introducao: e.target.value})}></textarea>
+                        </div>
+                    </div>
+                    <button className="btn btn-success mt-3" style={{ width: '100%' }} onClick={addRedacao}>Salvar Redação</button>
+                </div>
+            )}
+
+            {/* Gráficos e Resumo */}
+            {concluidas.length > 0 && (
+                <div className="grid grid-2 mb-4" style={{ gap: '1rem' }}>
+                    <div className="stat-card" style={{ background: 'rgba(10,30,80,0.3)', borderColor: 'rgba(10,30,80,0.5)' }}>
+                        <div className="stat-label"><TrendingUp size={14} style={{ display:'inline', marginRight:4}} /> Média Geral</div>
+                        <div className="stat-value" style={{ color: '#4da6ff' }}>{media}</div>
+                        <div className="text-xs text-muted mt-1">Baseado em {concluidas.length} redações</div>
+                    </div>
+                    <div className="stat-card" style={{ background: 'rgba(34,197,94,0.1)', borderColor: 'rgba(34,197,94,0.2)' }}>
+                        <div className="stat-label"><TrendingUp size={14} style={{ display:'inline', marginRight:4}} /> Maior Nota</div>
+                        <div className="stat-value text-success">{maxNota}</div>
+                        <div className="text-xs text-muted mt-1">Muito bem!</div>
+                    </div>
+                    <div style={{ gridColumn: '1 / -1' }}>
+                        <div className="text-xs text-muted mb-2 font-bold uppercase tracking-wide">Evolução Mensal (Gráfico em Barras)</div>
+                        <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', height: '100px', background: 'rgba(0,0,0,0.1)', padding: '10px', borderRadius: '8px' }}>
+                            {concluidas.slice(-10).map((r, i) => (
+                                <div key={i} title={`${r.tema} - Nota: ${r.nota}`} style={{ flex: 1, minWidth: '20px', background: 'linear-gradient(to top, #0e277c, #4da6ff)', height: `${(r.nota / 1000) * 100}%`, borderRadius: '4px 4px 0 0', position: 'relative' }}>
+                                    <span style={{ position: 'absolute', top: '-18px', left: '50%', transform: 'translateX(-50%)', fontSize: '0.65rem', color: '#fff', fontWeight: 'bold' }}>{r.nota}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Tabela de Redacões */}
+            <h3 className="section-title text-sm mt-4 mb-2"><LayoutIcon size={14}/> Minhas Redações</h3>
+            {redacoes.length === 0 ? (
+                <div className="alert alert-info">Nenhuma redação registrada. Crie uma nova para começar!</div>
+            ) : (
+                <div className="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Tema</th>
+                                <th>Status</th>
+                                <th>Nota</th>
+                                <th>Introdução/Repertório</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {redacoes.map(r => (
+                                <tr key={r.id}>
+                                    <td style={{ fontWeight: 'bold', maxWidth: '200px' }}>{r.tema}</td>
+                                    <td>
+                                        <select value={r.status} onChange={e => editStatus(r.id, e.target.value)} style={{ padding: '0.2rem', fontSize: '0.8rem', margin: 0, background: r.status==='concluída' ? 'var(--success-bg)' : 'rgba(255,255,255,0.05)' }}>
+                                            <option value="pendente">Pendente</option>
+                                            <option value="concluída">Concluída</option>
+                                        </select>
+                                    </td>
+                                    <td style={{ fontWeight: '900', color: r.nota >= 900 ? 'var(--success)' : r.nota > 0 ? 'var(--accent)' : 'var(--muted)' }}>
+                                        {r.nota ? r.nota : '-'}
+                                    </td>
+                                    <td style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', maxWidth: '300px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                        {r.introducao || '-'}
+                                    </td>
+                                    <td>
+                                        <button className="btn btn-ghost btn-sm" onClick={() => removeRedacao(r.id)}><Trash2 size={14}/></button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+        </div>
+    );
+};
+
 
 export const Courses = () => {
-    const [ferretoData, setFerretoData] = useState(() => {
-        const saved = localStorage.getItem('ferreto_progress');
-        const parsed = saved ? JSON.parse(saved) : [];
+    const [ferretoData, setFerretoData] = useLocalStorage('ferreto_progress', () =>
+        FERRETO_WEEKS.map(w => ({ ...w, current: 0 }))
+    );
 
-        // Merge logic: Use current structure, preserve 'current' from saved if matches week
-        return FERRETO_WEEKS.map(w => {
-            const found = parsed.find(p => p.week === w.week);
-            return { ...w, current: found ? found.current : 0 };
-        });
+    const merged = FERRETO_WEEKS.map(w => {
+        const found = ferretoData.find(p => p.week === w.week);
+        return { ...w, current: found ? found.current : 0 };
     });
 
-    useEffect(() => {
-        localStorage.setItem('ferreto_progress', JSON.stringify(ferretoData));
-    }, [ferretoData]);
-
     const updateProgress = (index, value) => {
-        const newData = [...ferretoData];
+        const newData = [...merged];
         let val = parseInt(value) || 0;
         if (val > newData[index].total) val = newData[index].total;
         if (val < 0) val = 0;
-        newData[index].current = val;
+        newData[index] = { ...newData[index], current: val };
         setFerretoData(newData);
     };
 
-    const calculateTotalProgress = () => {
-        const total = ferretoData.reduce((acc, item) => acc + item.total, 0);
-        const completed = ferretoData.reduce((acc, item) => acc + item.current, 0);
-        return Math.round((completed / total) * 100);
+    const totalPct = () => {
+        const total = merged.reduce((a, w) => a + w.total, 0);
+        const done  = merged.reduce((a, w) => a + w.current, 0);
+        return total > 0 ? Math.round((done / total) * 100) : 0;
     };
 
     return (
-        <div className="grid grid-1 gap-4">
+        <div className="animate-fade">
+            <h1 className="page-title">Cursos & Redação</h1>
+            <p className="page-subtitle">Acompanhe seus cursos, planeje suas redações e registre suas notas.</p>
 
-            {/* Course Info Cards */}
-            <div className="grid grid-2 gap-4">
-                {OTHER_COURSES.map((course) => {
-                    const Icon = course.icon;
-                    return (
-                        <div key={course.name} className="card flex items-start gap-4 hover:shadow-lg transition-shadow">
-                            <div className="p-3 bg-blue-50 rounded-lg">
-                                <Icon size={24} color="var(--accent-dark-blue)" />
-                            </div>
-                            <div>
-                                <h3 className="font-bold text-lg">{course.name}</h3>
-                                <p className="text-gray-600 text-sm">{course.desc}</p>
+            {/* Módulo de Redação */}
+            <RedacaoManager />
+
+            {/* Cursos Recomendados */}
+            <div className="card mb-4" style={{ borderLeft: '4px solid var(--accent)' }}>
+                <h2 className="section-title"><Code size={20} /> Cursos Extras / Tecnologia</h2>
+                <div className="grid grid-2" style={{ gap: '0.75rem' }}>
+                    {TECH_COURSES.map(course => (
+                        <div key={course.name} className="stat-card" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', borderLeft: '3px solid var(--accent)' }}>
+                            <div className="font-bold text-primary" style={{ fontSize: '0.875rem' }}>{course.name}</div>
+                            <div className="text-muted text-xs mt-1">{course.desc}</div>
+                            <div className="flex justify-between items-center mt-1">
+                                <span className="badge badge-success">⭐ Certificado {course.cert}</span>
+                                <a href={course.url} target="_blank" rel="noopener noreferrer" className="btn btn-outline btn-sm">Acessar <ExternalLink size={11} /></a>
                             </div>
                         </div>
-                    )
-                })}
-            </div>
-
-            {/* Recommended Tech Courses */}
-            <div className="card">
-                <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-                    <Code /> Cursos de Programação Recomendados (Saúde + Tech)
-                </h2>
-                <p className="text-sm text-gray-600 mb-6">
-                    Cursos gratuitos e com bom custo-benefício focados em tecnologia aplicada à saúde, IA, análise de dados e programação.
-                </p>
-
-                <div className="grid grid-2 gap-4">
-                    {TECH_COURSES_RECOMMENDED.map((course) => {
-                        const Icon = course.icon;
-                        return (
-                            <div key={course.name} className="card flex flex-col gap-3 hover:shadow-lg transition-all border-l-4 border-blue-900">
-                                <div className="flex items-start gap-3">
-                                    <div className="p-2 bg-blue-50 rounded-lg">
-                                        <Icon size={20} color="var(--accent-dark-blue)" />
-                                    </div>
-                                    <div className="flex-1">
-                                        <h3 className="font-bold text-base">{course.name}</h3>
-                                        <p className="text-gray-600 text-xs mt-1">{course.desc}</p>
-                                    </div>
-                                </div>
-                                <div className="flex justify-between items-center pt-2 border-t border-gray-100">
-                                    <span className="text-xs font-bold text-green-700">{course.value}</span>
-                                    <a
-                                        href={course.url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="text-xs text-blue-600 hover:underline font-medium"
-                                    >
-                                        Acessar →
-                                    </a>
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
-
-                <div className="mt-6 p-4 bg-green-50 rounded-lg text-sm text-green-800">
-                    <p><strong>💡 Dica:</strong> Priorize cursos com certificado de instituições reconhecidas (FGV, UFRGS, Fiocruz, UFMG). Foque em IA aplicada à saúde para se destacar no mercado!</p>
+                    ))}
                 </div>
             </div>
 
             {/* Ferreto Tracker */}
             <div className="card">
-                <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-bold flex items-center gap-2">
-                        <Video /> Progresso Ferreto
-                    </h2>
-                    <div className="text-right">
-                        <span className="text-sm text-gray-500 block">Total Geral</span>
-                        <span className="text-2xl font-bold text-blue-900">{calculateTotalProgress()}%</span>
+                <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
+                    <h2 className="section-title" style={{ margin: 0 }}><Video size={20} /> Progresso Ferreto</h2>
+                    <div style={{ textAlign: 'right' }}>
+                        <div className="text-muted text-xs">Total Geral</div>
+                        <div className="font-extrabold text-accent" style={{ fontSize: '1.75rem', lineHeight: 1 }}>{totalPct()}%</div>
                     </div>
                 </div>
 
-                <div className="grid grid-2 gap-x-8 gap-y-4">
-                    {ferretoData.map((week, index) => (
-                        <div key={week.week} className="flex items-center gap-4 p-2 hover:bg-gray-50 rounded-lg transition-colors">
-                            <span className="text-gray-500 font-mono w-24">Semana {week.week}</span>
-                            <div className="flex-1">
-                                <div className="progress-bar mb-1">
-                                    <div
-                                        className="progress-fill"
-                                        style={{ width: `${(week.current / week.total) * 100}%` }}
-                                    ></div>
+                <div className="progress-bar mb-4" style={{ height: 10 }}>
+                    <div className="progress-fill thick" style={{ width: `${totalPct()}%`, height: 10 }} />
+                </div>
+
+                <div className="grid grid-2" style={{ gap: '0.5rem' }}>
+                    {merged.map((week, i) => {
+                        const weekPct = week.total > 0 ? (week.current / week.total) * 100 : 0;
+                        return (
+                            <div key={week.week} className="flex items-center gap-3 p-2" style={{ background: week.current === week.total ? 'var(--success-bg)' : 'transparent' }}>
+                                <span className="text-muted font-mono text-xs" style={{ minWidth: 70 }}>Sem. {week.week}</span>
+                                <div style={{ flex: 1 }}>
+                                    <div className="progress-bar">
+                                        <div className={`progress-fill ${weekPct === 100 ? 'success' : ''}`} style={{ width: `${weekPct}%` }} />
+                                    </div>
                                 </div>
-                                <div className="flex justify-between text-xs text-gray-400">
-                                    <span>{week.current} concluídos</span>
-                                    <span>Meta: {week.total}</span>
-                                </div>
+                                <input
+                                    type="number" value={week.current === 0 ? '' : week.current}
+                                    onChange={e => updateProgress(i, e.target.value)}
+                                    placeholder="0" style={{ width: 56, textAlign: 'center', fontSize: '0.8rem', margin: 0, padding: '0.35rem' }}
+                                />
                             </div>
-                            <input
-                                type="number"
-                                value={week.current === 0 ? '' : week.current}
-                                onChange={(e) => updateProgress(index, e.target.value)}
-                                className="w-20 text-center font-bold"
-                                placeholder="0"
-                            />
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             </div>
         </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Calendar as CalendarIcon, RefreshCw, Save, Download, Image as ImageIcon } from 'lucide-react';
+import { Flame, RefreshCw, Download } from 'lucide-react';
 import html2canvas from 'html2canvas';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 
 const DAYS = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
 
@@ -8,229 +9,154 @@ const SUBJECT_AREAS = {
     exatas: ['Matemática', 'Física', 'Química'],
     humanas: ['História', 'Geografia', 'Filosofia', 'Sociologia'],
     naturezas: ['Biologia'],
-    linguagens: ['Português', 'Inglês', 'Literatura', 'Redação']
+    linguagens: ['Português', 'Inglês', 'Literatura', 'Redação'],
 };
+
+const rand = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
 export const Planner = () => {
     const plannerRef = useRef(null);
-    const [planner, setPlanner] = useState(() => {
-        const saved = localStorage.getItem('study_planner');
-        if (saved) return JSON.parse(saved);
-        return DAYS.reduce((acc, day) => ({ ...acc, [day]: '' }), {});
-    });
+    const [planner, setPlanner] = useLocalStorage('study_planner', () =>
+        DAYS.reduce((acc, day) => ({ ...acc, [day]: '' }), {})
+    );
     const [isExporting, setIsExporting] = useState(false);
 
-    useEffect(() => {
-        localStorage.setItem('study_planner', JSON.stringify(planner));
-    }, [planner]);
-
-    const handleCellChange = (day, value) => {
-        setPlanner(prev => ({ ...prev, [day]: value }));
-    };
+    const handleChange = (day, val) => setPlanner(p => ({ ...p, [day]: val }));
 
     const generateRoutine = () => {
-        if (!window.confirm("Isso substituirá o planejamento atual. Continuar?")) return;
-
-        const newPlanner = {};
-
-        // Base structure
+        if (!window.confirm('Isso substituirá o planejamento atual. Continuar?')) return;
+        const plan = {};
         DAYS.forEach(day => {
-            let tasks = [];
-
-            // Weekdays (Mon-Fri)
+            const tasks = [];
             if (['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta'].includes(day)) {
-                tasks.push("--- Tarde (15h - 18h) ---");
-
-                // Logic based on day (Alternating areas)
+                tasks.push('--- Tarde (15h–18h) ---');
                 if (day === 'Segunda' || day === 'Quarta') {
-                    tasks.push(`[Exatas] ${SUBJECT_AREAS.exatas[Math.floor(Math.random() * SUBJECT_AREAS.exatas.length)]}`);
-                    tasks.push(`[Naturezas] Biologia`);
+                    tasks.push(`[Exatas] ${rand(SUBJECT_AREAS.exatas)}`);
+                    tasks.push('[Naturezas] Biologia');
                 } else if (day === 'Terça' || day === 'Quinta') {
-                    tasks.push(`[Humanas] ${SUBJECT_AREAS.humanas[Math.floor(Math.random() * SUBJECT_AREAS.humanas.length)]}`);
-                    tasks.push(`[Linguagens] Português`);
+                    tasks.push(`[Humanas] ${rand(SUBJECT_AREAS.humanas)}`);
+                    tasks.push('[Linguagens] Português');
                 } else {
-                    // Sexta
-                    tasks.push(`[Redação] Prática de Texto`);
-                    tasks.push(`[Revisão] Conteúdos da Semana`);
+                    tasks.push('[Redação] Prática de Texto');
+                    tasks.push('[Revisão] Conteúdos da Semana');
                 }
-
-                tasks.push("--- Noite ---");
-                if (day === 'Sexta') tasks.push("[Curso] Redação Vanilma (19h)");
-                else tasks.push("[Revisão/Exercícios] 1h");
+                tasks.push('--- Noite ---');
+                tasks.push(day === 'Sexta' ? '[Curso] Redação Vanilma (19h)' : '[Revisão/Exercícios] 1h');
             } else if (day === 'Sábado') {
-                tasks.push("[Curso] Algoritmo (08h - 16h)");
-                tasks.push("[Descanso] Pós-curso");
+                tasks.push('[Curso] Algoritmo (08h–16h)');
+                tasks.push('[Descanso] Pós-curso');
             } else {
-                // Domingo
-                tasks.push("[Simulado] Prova Antiga ou Lista");
-                tasks.push("[Descanso] Livre");
+                tasks.push('[Simulado] Prova Antiga ou Lista');
+                tasks.push('[Descanso] Livre');
             }
-
-            newPlanner[day] = tasks.join('\n');
+            plan[day] = tasks.join('\n');
         });
-
-        setPlanner(newPlanner);
+        setPlanner(plan);
     };
 
     const exportAsImage = async () => {
         if (!plannerRef.current) return;
-
         setIsExporting(true);
-
         try {
-            // Wait a bit for the export state to render
-            await new Promise(resolve => setTimeout(resolve, 100));
-
+            await new Promise(r => setTimeout(r, 150));
             const canvas = await html2canvas(plannerRef.current, {
-                backgroundColor: '#f5f5f7',
-                scale: 2, // Higher quality
+                backgroundColor: '#0b0f1a',
+                scale: 2,
                 logging: false,
                 useCORS: true,
-                allowTaint: true
             });
-
-            // Convert to blob and download
-            canvas.toBlob((blob) => {
-                const url = URL.createObjectURL(blob);
+            canvas.toBlob(blob => {
+                const url  = URL.createObjectURL(blob);
                 const link = document.createElement('a');
                 const date = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
-                link.download = `planner-semanal-${date}.png`;
-                link.href = url;
+                link.download = `planner-${date}.png`;
+                link.href     = url;
                 link.click();
                 URL.revokeObjectURL(url);
                 setIsExporting(false);
             });
-        } catch (error) {
-            console.error('Erro ao exportar:', error);
-            alert('Erro ao exportar imagem. Tente novamente.');
+        } catch (err) {
+            console.error(err);
+            alert('Erro ao exportar. Tente novamente.');
             setIsExporting(false);
         }
     };
 
-    const getCurrentWeek = () => {
-        const now = new Date();
+    const getWeekNum = () => {
+        const now   = new Date();
         const start = new Date(now.getFullYear(), 0, 1);
-        const diff = now - start;
-        const oneWeek = 1000 * 60 * 60 * 24 * 7;
-        return Math.ceil(diff / oneWeek);
+        return Math.ceil(((now - start) / 86400000 + 1) / 7);
     };
 
     return (
-        <div className="card">
-            <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold flex items-center gap-2">
-                    <CalendarIcon /> Planejamento Semanal
-                </h2>
-                <div className="flex gap-2" style={{ flexWrap: 'wrap' }}>
-                    <button onClick={generateRoutine} className="btn btn-outline gap-2">
-                        <RefreshCw size={18} /> Gerar Automático
-                    </button>
-                    <button onClick={exportAsImage} className="btn btn-primary gap-2" disabled={isExporting}>
-                        <Download size={18} /> {isExporting ? 'Exportando...' : 'Exportar PNG'}
-                    </button>
-                </div>
-            </div>
+        <div className="animate-fade">
+            <h1 className="page-title">Planner Semanal</h1>
+            <p className="page-subtitle">Organize sua semana de estudos e exporte como imagem</p>
 
-            {/* Exportable Area */}
-            <div ref={plannerRef} style={{
-                padding: isExporting ? '40px' : '0',
-                backgroundColor: isExporting ? '#ffffff' : 'transparent'
-            }}>
-                {/* Header for export */}
-                {isExporting && (
-                    <div style={{
-                        textAlign: 'center',
-                        marginBottom: '30px',
-                        borderBottom: '3px solid #003366',
-                        paddingBottom: '20px'
-                    }}>
-                        <h1 style={{
-                            fontSize: '32px',
-                            fontWeight: 'bold',
-                            color: '#003366',
-                            marginBottom: '8px'
-                        }}>
-                            Planejamento Semanal
-                        </h1>
-                        <p style={{
-                            fontSize: '16px',
-                            color: '#666',
-                            fontWeight: '500'
-                        }}>
-                            Semana {getCurrentWeek()} • {new Date().getFullYear()}
-                        </p>
+            <div className="card">
+                <div className="flex justify-between items-center mb-6 flex-wrap gap-3">
+                    <div className="flex items-center gap-2 text-secondary font-semibold text-sm">
+                        <Flame size={16} style={{ color: 'var(--warning)' }} />
+                        Semana {getWeekNum()} · {new Date().getFullYear()}
                     </div>
-                )}
+                    <div className="flex gap-2 flex-wrap">
+                        <button onClick={generateRoutine} className="btn btn-outline btn-sm">
+                            <RefreshCw size={14} /> Gerar Automático
+                        </button>
+                        <button onClick={exportAsImage} className="btn btn-primary btn-sm" disabled={isExporting}>
+                            <Download size={14} /> {isExporting ? 'Exportando…' : 'Exportar PNG'}
+                        </button>
+                    </div>
+                </div>
 
-                <div className="grid grid-3 gap-4">
-                    {DAYS.map((day, index) => (
-                        <div
-                            key={day}
-                            className="flex flex-col rounded-lg p-3 border-2"
-                            style={{
-                                backgroundColor: isExporting ? '#f8f9fa' : '#f9fafb',
-                                borderColor: isExporting ? '#003366' : '#e5e7eb',
-                                minHeight: '200px'
-                            }}
-                        >
-                            <h3
-                                className="font-bold text-center mb-2 rounded py-2"
-                                style={{
-                                    backgroundColor: isExporting ? '#003366' : 'white',
-                                    color: isExporting ? 'white' : '#1d1d1f',
-                                    fontSize: isExporting ? '18px' : '16px',
-                                    boxShadow: isExporting ? 'none' : '0 1px 3px rgba(0,0,0,0.1)'
-                                }}
-                            >
-                                {day}
-                            </h3>
-
-                            {isExporting ? (
-                                <div style={{
-                                    whiteSpace: 'pre-wrap',
-                                    fontSize: '13px',
-                                    lineHeight: '1.6',
-                                    color: '#1d1d1f',
-                                    padding: '8px',
-                                    fontFamily: 'system-ui, -apple-system, sans-serif'
-                                }}>
-                                    {planner[day] || 'Sem atividades planejadas'}
-                                </div>
-                            ) : (
-                                <textarea
-                                    className="flex-1 w-full min-h-[150px] p-2 text-sm font-sans resize-none focus:bg-white transition-colors bg-transparent border-0"
-                                    value={planner[day]}
-                                    onChange={(e) => handleCellChange(day, e.target.value)}
-                                    placeholder="Adicionar metas..."
-                                />
-                            )}
+                <div ref={plannerRef} style={{ padding: isExporting ? '40px' : 0 }}>
+                    {isExporting && (
+                        <div style={{ textAlign: 'center', marginBottom: 32, paddingBottom: 24, borderBottom: '2px solid #3b82f6' }}>
+                            <h1 style={{ fontSize: 28, fontWeight: 900, color: '#60a5fa', marginBottom: 8 }}>
+                                Planejamento Semanal
+                            </h1>
+                            <p style={{ color: '#94a3b8', fontSize: 14 }}>
+                                Semana {getWeekNum()} · {new Date().getFullYear()} · CronogramaLife
+                            </p>
                         </div>
-                    ))}
+                    )}
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.75rem' }}>
+                        {DAYS.map(day => (
+                            <div key={day} className="planner-day">
+                                <div className="planner-day-header">{day}</div>
+                                {isExporting ? (
+                                    <div style={{
+                                        whiteSpace: 'pre-wrap', fontSize: 12,
+                                        color: '#94a3b8', padding: '0.75rem', lineHeight: 1.7,
+                                    }}>
+                                        {planner[day] || 'Sem atividades planejadas'}
+                                    </div>
+                                ) : (
+                                    <textarea
+                                        className="planner-day textarea"
+                                        value={planner[day]}
+                                        onChange={e => handleChange(day, e.target.value)}
+                                        placeholder="Adicionar metas…"
+                                    />
+                                )}
+                            </div>
+                        ))}
+                    </div>
+
+                    {isExporting && (
+                        <div style={{ marginTop: 28, textAlign: 'center', color: '#64748b', fontSize: 11, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+                            "Constância &gt; Intensidade" · CronogramaLife
+                        </div>
+                    )}
                 </div>
 
-                {/* Footer for export */}
-                {isExporting && (
-                    <div style={{
-                        marginTop: '30px',
-                        textAlign: 'center',
-                        paddingTop: '20px',
-                        borderTop: '2px solid #e5e7eb',
-                        color: '#666',
-                        fontSize: '12px'
-                    }}>
-                        <p style={{ fontWeight: '600', marginBottom: '4px' }}>
-                            "Constância &gt; Intensidade"
-                        </p>
-                        <p>SystemLife • Organização Acadêmica</p>
+                {!isExporting && (
+                    <div className="alert alert-info mt-4">
+                        <p><strong>Dica:</strong> Use "Gerar Automático" para criar uma base balanceada entre Exatas e Humanas · "Exportar PNG" salva o planner como imagem.</p>
                     </div>
                 )}
             </div>
-
-            {!isExporting && (
-                <div className="mt-6 p-4 bg-blue-50 rounded-lg text-sm text-blue-800">
-                    <p><strong>Dica:</strong> Use o botão "Gerar Automático" para criar uma base de estudos balanceada entre Exatas e Humanas. Clique em "Exportar PNG" para salvar como imagem.</p>
-                </div>
-            )}
         </div>
     );
 };
