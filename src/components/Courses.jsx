@@ -59,6 +59,7 @@ const RedacaoManager = () => {
                             <label>Status</label>
                             <select value={form.status} onChange={e => setForm({...form, status: e.target.value})}>
                                 <option value="pendente">Pendente / Para Fazer</option>
+                                <option value="aguardando_nota">Escrita / Esperando Nota</option>
                                 <option value="concluída">Concluída / Corrigida</option>
                             </select>
                         </div>
@@ -121,7 +122,7 @@ const RedacaoManager = () => {
                         </thead>
                         <tbody>
                             {redacoes.map(r => (
-                                <tr key={r.id} style={{ background: r.status === 'pendente' ? 'rgba(255, 165, 0, 0.1)' : 'transparent', borderLeft: r.status === 'pendente' ? '4px solid orange' : 'none' }}>
+                                <tr key={r.id} style={{ background: r.status === 'pendente' ? 'rgba(255, 165, 0, 0.1)' : r.status === 'aguardando_nota' ? 'rgba(77, 166, 255, 0.1)' : 'transparent', borderLeft: r.status === 'pendente' ? '4px solid orange' : r.status === 'aguardando_nota' ? '4px solid #4da6ff' : 'none' }}>
                                     <td style={{ fontWeight: 'bold', maxWidth: '200px' }}>
                                         {r.tema}
                                         {r.status === 'pendente' && <div style={{ fontSize: '0.7rem', color: 'orange', marginTop: '4px', fontWeight: 'normal' }}>⚠️ Em destaque - Pendente</div>}
@@ -129,14 +130,30 @@ const RedacaoManager = () => {
                                     <td>
                                         {r.status === 'concluída' ? (
                                             <span style={{ fontSize: '0.8rem', color: 'var(--success)', fontWeight: 'bold' }}>✅ Concluída</span>
+                                        ) : r.status === 'aguardando_nota' ? (
+                                            <div style={{display: 'flex', flexDirection: 'column', gap: '4px'}}>
+                                                <span style={{ fontSize: '0.75rem', color: '#4da6ff', fontWeight: 'bold' }}>⏳ Esperando Nota</span>
+                                                <button className="btn btn-sm btn-outline" style={{ fontSize: '0.65rem', padding: '0.2rem 0.4rem', borderColor: '#4da6ff', color: '#4da6ff', background: 'transparent' }} onClick={() => {
+                                                    const notaStr = window.prompt("Qual foi a sua nota? (0-1000):");
+                                                    if (notaStr !== null) {
+                                                        const notaNum = parseInt(notaStr);
+                                                        setRedacoes(redacoes.map(item => item.id === r.id ? { ...item, status: 'concluída', nota: isNaN(notaNum) ? 0 : notaNum } : item));
+                                                    }
+                                                }}>✔️ Lançar Nota</button>
+                                            </div>
                                         ) : (
-                                            <button className="btn btn-sm btn-outline" style={{ fontSize: '0.7rem', padding: '0.3rem 0.5rem', borderColor: 'orange', color: 'orange', background: 'transparent' }} onClick={() => {
-                                                const notaStr = window.prompt("Redação concluída! Qual foi a sua nota? (0-1000):");
-                                                if (notaStr !== null) {
-                                                    const notaNum = parseInt(notaStr);
-                                                    setRedacoes(redacoes.map(item => item.id === r.id ? { ...item, status: 'concluída', nota: isNaN(notaNum) ? 0 : notaNum } : item));
-                                                }
-                                            }}>✔️ Concluir + Nota</button>
+                                            <div style={{display: 'flex', flexDirection: 'column', gap: '4px'}}>
+                                                <button className="btn btn-sm btn-outline" style={{ fontSize: '0.65rem', padding: '0.2rem 0.4rem', borderColor: 'orange', color: 'orange', background: 'transparent' }} onClick={() => {
+                                                    setRedacoes(redacoes.map(item => item.id === r.id ? { ...item, status: 'aguardando_nota' } : item));
+                                                }}>⏳ Escrita (Esperando Nota)</button>
+                                                <button className="btn btn-sm btn-outline" style={{ fontSize: '0.65rem', padding: '0.2rem 0.4rem', borderColor: 'var(--success)', color: 'var(--success)', background: 'transparent' }} onClick={() => {
+                                                    const notaStr = window.prompt("Redação concluída! Qual foi a sua nota? (0-1000):");
+                                                    if (notaStr !== null) {
+                                                        const notaNum = parseInt(notaStr);
+                                                        setRedacoes(redacoes.map(item => item.id === r.id ? { ...item, status: 'concluída', nota: isNaN(notaNum) ? 0 : notaNum } : item));
+                                                    }
+                                                }}>✔️ Lançar Nota Direto</button>
+                                            </div>
                                         )}
                                     </td>
                                     <td style={{ fontWeight: '900', color: r.nota >= 900 ? 'var(--success)' : r.nota > 0 ? 'var(--accent)' : 'var(--muted)' }}>
