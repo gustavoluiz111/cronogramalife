@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { Heart, Moon, Zap, Activity, CalendarDays, ChevronLeft, ChevronRight, TrendingUp } from 'lucide-react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
@@ -67,8 +67,8 @@ export const Health = () => {
         return stats;
     };
 
-    const weekStats = useMemo(() => getStatsForDays(7), [history, todayStr]);
-    const monthStats = useMemo(() => getStatsForDays(30), [history, todayStr]);
+    const weekStats = getStatsForDays(7);
+    const monthStats = getStatsForDays(30);
 
     const avgSleepWeek = weekStats.daysCount ? (weekStats.sleepTotal / weekStats.daysCount).toFixed(1) : 0;
     const avgSleepMonth = monthStats.daysCount ? (monthStats.sleepTotal / monthStats.daysCount).toFixed(1) : 0;
@@ -80,7 +80,6 @@ export const Health = () => {
     };
 
     const todayStatus = getSleepStatus(todayData.sleep);
-    const sleepPct = Math.min((todayData.sleep / 10) * 100, 100); // UI max represented is ~10 for bar
 
     return (
         <div className="animate-fade" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', paddingBottom: '2rem' }}>
@@ -145,7 +144,6 @@ export const Health = () => {
                         <button 
                             onClick={() => updateToday({ workout: !todayData.workout })}
                             style={{
-                                width: '100%', padding: '1rem', borderRadius: '12px', border: 'none',
                                 background: todayData.workout ? 'linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.1))' : 'rgba(255,255,255,0.05)',
                                 color: todayData.workout ? '#4ade80' : 'rgba(255,255,255,0.6)',
                                 border: `1px solid ${todayData.workout ? 'rgba(34, 197, 94, 0.4)' : 'rgba(255,255,255,0.1)'}`,

@@ -121,16 +121,26 @@ const RedacaoManager = () => {
                         </thead>
                         <tbody>
                             {redacoes.map(r => (
-                                <tr key={r.id}>
-                                    <td style={{ fontWeight: 'bold', maxWidth: '200px' }}>{r.tema}</td>
+                                <tr key={r.id} style={{ background: r.status === 'pendente' ? 'rgba(255, 165, 0, 0.1)' : 'transparent', borderLeft: r.status === 'pendente' ? '4px solid orange' : 'none' }}>
+                                    <td style={{ fontWeight: 'bold', maxWidth: '200px' }}>
+                                        {r.tema}
+                                        {r.status === 'pendente' && <div style={{ fontSize: '0.7rem', color: 'orange', marginTop: '4px', fontWeight: 'normal' }}>⚠️ Em destaque - Pendente</div>}
+                                    </td>
                                     <td>
-                                        <select value={r.status} onChange={e => editStatus(r.id, e.target.value)} style={{ padding: '0.2rem', fontSize: '0.8rem', margin: 0, background: r.status==='concluída' ? 'var(--success-bg)' : 'rgba(255,255,255,0.05)' }}>
-                                            <option value="pendente">Pendente</option>
-                                            <option value="concluída">Concluída</option>
-                                        </select>
+                                        {r.status === 'concluída' ? (
+                                            <span style={{ fontSize: '0.8rem', color: 'var(--success)', fontWeight: 'bold' }}>✅ Concluída</span>
+                                        ) : (
+                                            <button className="btn btn-sm btn-outline" style={{ fontSize: '0.7rem', padding: '0.3rem 0.5rem', borderColor: 'orange', color: 'orange', background: 'transparent' }} onClick={() => {
+                                                const notaStr = window.prompt("Redação concluída! Qual foi a sua nota? (0-1000):");
+                                                if (notaStr !== null) {
+                                                    const notaNum = parseInt(notaStr);
+                                                    setRedacoes(redacoes.map(item => item.id === r.id ? { ...item, status: 'concluída', nota: isNaN(notaNum) ? 0 : notaNum } : item));
+                                                }
+                                            }}>✔️ Concluir + Nota</button>
+                                        )}
                                     </td>
                                     <td style={{ fontWeight: '900', color: r.nota >= 900 ? 'var(--success)' : r.nota > 0 ? 'var(--accent)' : 'var(--muted)' }}>
-                                        {r.nota ? r.nota : '-'}
+                                        {r.nota !== undefined && r.nota !== null ? r.nota : '-'}
                                     </td>
                                     <td style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', maxWidth: '300px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                         {r.introducao || '-'}
