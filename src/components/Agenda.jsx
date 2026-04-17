@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ClipboardList, Calendar, BookOpen, Award, CheckSquare, Plus, Trash2, Check, RotateCcw, MapPin } from 'lucide-react';
+import { ClipboardList, Calendar, BookOpen, Award, CheckSquare, Plus, Trash2, Check, RotateCcw, MapPin, Edit2 } from 'lucide-react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
 const TABS = [
@@ -36,13 +36,29 @@ const EventsTab = () => {
     const [events, setEvents] = useLocalStorage('agenda_events', []);
     const [showForm, setShowForm] = useState(false);
     const [form, setForm] = useState({ name: '', type: 'somatório', category: '', date: '', notes: '' });
+    const [editingId, setEditingId] = useState(null);
+
+    const handleFormClose = () => {
+        setShowForm(false);
+        setEditingId(null);
+        setForm({ name: '', type: 'somatório', category: '', date: '', notes: '' });
+    };
 
     const addEvent = () => {
         if (!form.name.trim()) return;
-        const newEv = { ...form, id: Date.now(), done: false };
-        setEvents([...events, newEv].sort((a, b) => (a.date || '9') > (b.date || '9') ? 1 : -1));
-        setForm({ name: '', type: 'somatório', category: '', date: '', notes: '' });
-        setShowForm(false);
+        if (editingId) {
+            setEvents(events.map(e => e.id === editingId ? { ...form, id: e.id, done: e.done } : e).sort((a, b) => (a.date || '9') > (b.date || '9') ? 1 : -1));
+        } else {
+            const newEv = { ...form, id: Date.now(), done: false };
+            setEvents([...events, newEv].sort((a, b) => (a.date || '9') > (b.date || '9') ? 1 : -1));
+        }
+        handleFormClose();
+    };
+
+    const editEvent = (ev) => {
+        setForm({ name: ev.name, type: ev.type || 'somatório', category: ev.category || '', date: ev.date || '', notes: ev.notes || '' });
+        setEditingId(ev.id);
+        setShowForm(true);
     };
 
     const toggleDone = (id) =>
@@ -97,8 +113,10 @@ const EventsTab = () => {
                             value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
                     </div>
                     <div className="flex gap-2">
-                        <button className="btn btn-primary btn-sm" onClick={addEvent}>Salvar Evento</button>
-                        <button className="btn btn-outline btn-sm" onClick={() => setShowForm(false)}>Cancelar</button>
+                        <button className="btn btn-primary btn-sm" onClick={addEvent}>
+                            {editingId ? 'Atualizar Evento' : 'Salvar Evento'}
+                        </button>
+                        <button className="btn btn-outline btn-sm" onClick={handleFormClose}>Cancelar</button>
                     </div>
                 </div>
             )}
@@ -136,9 +154,14 @@ const EventsTab = () => {
                             </div>
                             {ev.notes && <div className="event-meta mt-1">{ev.notes}</div>}
                         </div>
-                        <button className="btn btn-ghost btn-sm" onClick={() => removeEvent(ev.id)}>
-                            <Trash2 size={14} />
-                        </button>
+                        <div className="flex gap-1 flex-shrink-0">
+                            <button className="btn btn-ghost btn-sm" onClick={() => editEvent(ev)}>
+                                <Edit2 size={14} />
+                            </button>
+                            <button className="btn btn-ghost btn-sm" onClick={() => removeEvent(ev.id)}>
+                                <Trash2 size={14} />
+                            </button>
+                        </div>
                     </div>
                 );
             })}
@@ -173,12 +196,28 @@ const TopicsTab = () => {
     const [topics, setTopics] = useLocalStorage('agenda_topics', []);
     const [showForm, setShowForm] = useState(false);
     const [form, setForm] = useState({ name: '', subject: '', priority: 'Alta' });
+    const [editingId, setEditingId] = useState(null);
+
+    const handleFormClose = () => {
+        setShowForm(false);
+        setEditingId(null);
+        setForm({ name: '', subject: '', priority: 'Alta' });
+    };
 
     const addTopic = () => {
         if (!form.name.trim()) return;
-        setTopics([...topics, { ...form, id: Date.now(), done: false }]);
-        setForm({ name: '', subject: '', priority: 'Alta' });
-        setShowForm(false);
+        if (editingId) {
+            setTopics(topics.map(t => t.id === editingId ? { ...t, ...form } : t));
+        } else {
+            setTopics([...topics, { ...form, id: Date.now(), done: false }]);
+        }
+        handleFormClose();
+    };
+
+    const editTopic = (t) => {
+        setForm({ name: t.name, subject: t.subject || '', priority: t.priority || 'Alta' });
+        setEditingId(t.id);
+        setShowForm(true);
     };
 
     const toggle = (id) => setTopics(topics.map(t => t.id === id ? { ...t, done: !t.done } : t));
@@ -220,8 +259,8 @@ const TopicsTab = () => {
                         </div>
                     </div>
                     <div className="flex gap-2 mt-1">
-                        <button className="btn btn-primary btn-sm" onClick={addTopic}>Salvar</button>
-                        <button className="btn btn-outline btn-sm" onClick={() => setShowForm(false)}>Cancelar</button>
+                        <button className="btn btn-primary btn-sm" onClick={addTopic}>{editingId ? 'Atualizar' : 'Salvar'}</button>
+                        <button className="btn btn-outline btn-sm" onClick={handleFormClose}>Cancelar</button>
                     </div>
                 </div>
             )}
@@ -240,7 +279,10 @@ const TopicsTab = () => {
                             <span className={`badge badge-${priColor[t.priority]}`}>{t.priority}</span>
                         </div>
                     </div>
-                    <button className="btn btn-ghost btn-sm" onClick={() => remove(t.id)}><Trash2 size={12} /></button>
+                    <div className="flex gap-1 flex-shrink-0">
+                        <button className="btn btn-ghost btn-sm" onClick={() => editTopic(t)}><Edit2 size={12} /></button>
+                        <button className="btn btn-ghost btn-sm" onClick={() => remove(t.id)}><Trash2 size={12} /></button>
+                    </div>
                 </div>
             ))}
 
@@ -267,6 +309,7 @@ const CertsTab = () => {
     const [certs, setCerts] = useLocalStorage('agenda_certs', []);
     const [showForm, setShowForm] = useState(false);
     const [form, setForm] = useState({ name: '', institution: '', date: '', area: '' });
+    const [editingId, setEditingId] = useState(null);
 
     const AREAS = ['Tecnologia', 'Programação', 'IA / Dados', 'Inglês', 'Saúde', 'Redação', 'Marketing', 'Outro'];
 
@@ -295,11 +338,26 @@ const CertsTab = () => {
         }
     }, []);
 
+    const handleFormClose = () => {
+        setShowForm(false);
+        setEditingId(null);
+        setForm({ name: '', institution: '', date: '', area: '' });
+    };
+
     const addCert = () => {
         if (!form.name.trim()) return;
-        setCerts([...certs, { ...form, id: Date.now() }]);
-        setForm({ name: '', institution: '', date: '', area: '' });
-        setShowForm(false);
+        if (editingId) {
+            setCerts(certs.map(c => c.id === editingId ? { ...c, ...form } : c));
+        } else {
+            setCerts([...certs, { ...form, id: Date.now() }]);
+        }
+        handleFormClose();
+    };
+
+    const editCert = (c) => {
+        setForm({ name: c.name, institution: c.institution || '', date: c.date || '', area: c.area || '' });
+        setEditingId(c.id);
+        setShowForm(true);
     };
 
     const remove = (id) => setCerts(certs.filter(c => c.id !== id));
@@ -345,8 +403,8 @@ const CertsTab = () => {
                         </div>
                     </div>
                     <div className="flex gap-2 mt-1">
-                        <button className="btn btn-primary btn-sm" onClick={addCert}>Salvar</button>
-                        <button className="btn btn-outline btn-sm" onClick={() => setShowForm(false)}>Cancelar</button>
+                        <button className="btn btn-primary btn-sm" onClick={addCert}>{editingId ? 'Atualizar' : 'Salvar'}</button>
+                        <button className="btn btn-outline btn-sm" onClick={handleFormClose}>Cancelar</button>
                     </div>
                 </div>
             )}
@@ -369,9 +427,14 @@ const CertsTab = () => {
                                 {c.date && <span className="badge badge-muted">{new Date(c.date + 'T00:00:00').toLocaleDateString('pt-BR')}</span>}
                             </div>
                         </div>
-                        <button className="btn btn-ghost btn-sm" onClick={() => remove(c.id)}>
-                            <Trash2 size={12} />
-                        </button>
+                        <div className="flex flex-col justify-center gap-1 flex-shrink-0">
+                            <button className="btn btn-ghost btn-sm" onClick={() => editCert(c)}>
+                                <Edit2 size={12} />
+                            </button>
+                            <button className="btn btn-ghost btn-sm" onClick={() => remove(c.id)}>
+                                <Trash2 size={12} />
+                            </button>
+                        </div>
                     </div>
                 ))}
             </div>
@@ -384,13 +447,30 @@ const TodoTab = () => {
     const [items, setItems] = useLocalStorage('agenda_todo', []);
     const [input, setInput] = useState('');
     const [category, setCategory] = useState('Escola');
+    const [editingId, setEditingId] = useState(null);
 
     const TODO_CATEGORIES = ['Escola', 'Curso', 'Pessoal', 'Simulado', 'Prova', 'Outro'];
 
     const add = () => {
         const t = input.trim();
         if (!t) return;
-        setItems([...items, { id: Date.now(), text: t, category, done: false }]);
+        if (editingId) {
+            setItems(items.map(i => i.id === editingId ? { ...i, text: t, category } : i));
+            setEditingId(null);
+        } else {
+            setItems([...items, { id: Date.now(), text: t, category, done: false }]);
+        }
+        setInput('');
+    };
+
+    const editTodo = (item) => {
+        setInput(item.text);
+        setCategory(item.category || 'Escola');
+        setEditingId(item.id);
+    };
+
+    const cancelEdit = () => {
+        setEditingId(null);
         setInput('');
     };
 
@@ -429,7 +509,12 @@ const TodoTab = () => {
                 >
                     {TODO_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
-                <button className="btn btn-primary" onClick={add}><Plus size={16} /></button>
+                <button className="btn btn-primary" onClick={add}>
+                    {editingId ? <Check size={16} /> : <Plus size={16} />}
+                </button>
+                {editingId && (
+                    <button className="btn btn-outline" onClick={cancelEdit}>Cancelar</button>
+                )}
             </div>
 
             {pending.length === 0 && done.length === 0 && (
@@ -443,7 +528,10 @@ const TodoTab = () => {
                         <span className="todo-text">{item.text}</span>
                         {item.category && <span className="badge badge-muted" style={{ alignSelf: 'flex-start', fontSize: '0.65rem' }}>{item.category}</span>}
                     </div>
-                    <button className="btn btn-ghost btn-sm" onClick={() => remove(item.id)}><Trash2 size={12} /></button>
+                    <div className="flex gap-1 flex-shrink-0">
+                        <button className="btn btn-ghost btn-sm" onClick={() => editTodo(item)}><Edit2 size={12} /></button>
+                        <button className="btn btn-ghost btn-sm" onClick={() => remove(item.id)}><Trash2 size={12} /></button>
+                    </div>
                 </div>
             ))}
 
