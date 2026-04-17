@@ -132,11 +132,10 @@ const EventsTab = () => {
                 const urgency = diff !== null && diff <= 3 ? 'danger' : diff !== null && diff <= 7 ? 'warning' : 'info';
                 return (
                     <div key={ev.id} className="event-item">
-                        <button onClick={() => toggleDone(ev.id)}
-                            className={`btn btn-sm badge badge-${urgency}`}
-                            style={{ padding: '0.35rem 0.5rem', minWidth: 48, textAlign: 'center', fontSize: '0.7rem' }}>
+                        <div className={`badge badge-${urgency}`}
+                            style={{ padding: '0.35rem 0.5rem', minWidth: 48, textAlign: 'center', fontSize: '0.7rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             {ev.date ? formatDate(ev.date) : '?'}
-                        </button>
+                        </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                             <div className="event-name">{ev.name}</div>
                             <div className="flex flex-wrap gap-1 mt-1">
@@ -155,10 +154,13 @@ const EventsTab = () => {
                             {ev.notes && <div className="event-meta mt-1">{ev.notes}</div>}
                         </div>
                         <div className="flex gap-1 flex-shrink-0">
-                            <button className="btn btn-ghost btn-sm" onClick={() => editEvent(ev)}>
+                            <button className="btn btn-ghost btn-sm text-success" onClick={() => toggleDone(ev.id)} title="Marcar como Feito">
+                                <Check size={14} />
+                            </button>
+                            <button className="btn btn-ghost btn-sm" onClick={() => editEvent(ev)} title="Editar">
                                 <Edit2 size={14} />
                             </button>
-                            <button className="btn btn-ghost btn-sm" onClick={() => removeEvent(ev.id)}>
+                            <button className="btn btn-ghost btn-sm text-danger" onClick={() => removeEvent(ev.id)} title="Excluir">
                                 <Trash2 size={14} />
                             </button>
                         </div>
