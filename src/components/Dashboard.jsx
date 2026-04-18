@@ -1,5 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Clock, Book, Activity, Zap, Play, Pause, RotateCcw, TrendingUp } from 'lucide-react';
+import { Clock, Book, Activity, Zap, Play, Pause, RotateCcw, TrendingUp, Calendar, Bell } from 'lucide-react';
+
+const getLocalDateString = (d = new Date()) => {
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+};
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -112,7 +119,7 @@ const Pomodoro = () => {
 // ─── Dashboard ───────────────────────────────────────────────────────────────
 export const Dashboard = () => {
     const { userProfile } = useAuth();
-    const [health]  = useLocalStorage('health_tracker', { sleep: 0, workouts: {} });
+    const [healthHistory] = useLocalStorage('health_history', {});
     const [ferreto] = useLocalStorage('ferreto_progress', []);
     const [grades]  = useLocalStorage('school_grades_v3', {});
     const [config]  = useLocalStorage('school_config_v2', { passingGrade: 5, numSomatórios: 2, somatórioMax: [8, 8], hasSimulado: true, simuladoMax: 4, divideBy: 2 });
@@ -146,7 +153,17 @@ export const Dashboard = () => {
         }).length;
     };
 
-    const workoutsThisWeek = Object.values(health.workouts || {}).filter(Boolean).length;
+    const todayStr = getLocalDateString();
+    const todaySleep = healthHistory[todayStr]?.sleep || 0;
+    
+    let workoutsThisWeek = 0;
+    for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        if (healthHistory[getLocalDateString(d)]?.workout) {
+            workoutsThisWeek++;
+        }
+    }
 
     return (
         <div className="animate-fade">
@@ -169,14 +186,71 @@ export const Dashboard = () => {
                 </div>
             </div>
 
+            {/* ─── Avisos Simulados ─── */}
+            <div className="card mb-4" style={{ border: '1px solid rgba(255, 215, 0, 0.2)', position: 'relative', overflow: 'hidden' }}>
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '4px', background: 'linear-gradient(90deg, #ffd700, #ff8c00)' }} />
+                <h3 className="section-title mb-4" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ffd700' }}>
+                    <Bell size={20} /> Avisos e Horários de Simulados
+                </h3>
+                <div className="grid grid-3" style={{ gap: '1rem' }}>
+                    <div className="card" style={{ background: 'rgba(255,255,255,0.02)', padding: '1.25rem', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                            <Calendar size={16} className="text-muted" /> <span className="font-bold" style={{ fontSize: '1.1rem' }}>27/04</span>
+                        </div>
+                        <div className="text-sm">
+                            <p className="mb-2">
+                                <span className="text-muted" style={{ fontSize: '0.75rem' }}>07:40 – 09:40</span><br/>
+                                <strong>História, Física</strong>
+                            </p>
+                            <p>
+                                <span className="text-muted" style={{ fontSize: '0.75rem' }}>10:00 – 12:00</span><br/>
+                                <strong>Português, Artes</strong>
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div className="card" style={{ background: 'rgba(255,255,255,0.02)', padding: '1.25rem', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                            <Calendar size={16} className="text-muted" /> <span className="font-bold" style={{ fontSize: '1.1rem' }}>29/04</span>
+                        </div>
+                        <div className="text-sm">
+                            <p className="mb-2">
+                                <span className="text-muted" style={{ fontSize: '0.75rem' }}>07:40 – 09:40</span><br/>
+                                <strong>Biologia, Filosofia</strong>
+                            </p>
+                            <p>
+                                <span className="text-muted" style={{ fontSize: '0.75rem' }}>10:00 – 12:00</span><br/>
+                                <strong>Química, Inglês</strong>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="card" style={{ background: 'rgba(255,255,255,0.02)', padding: '1.25rem', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                            <Calendar size={16} className="text-muted" /> <span className="font-bold" style={{ fontSize: '1.1rem' }}>04/05</span>
+                        </div>
+                        <div className="text-sm">
+                            <p className="mb-2">
+                                <span className="text-muted" style={{ fontSize: '0.75rem' }}>07:40 – 09:40</span><br/>
+                                <strong>Educação Física, Matemática</strong>
+                            </p>
+                            <p>
+                                <span className="text-muted" style={{ fontSize: '0.75rem' }}>10:00 – 12:00</span><br/>
+                                <strong>Geografia, Sociologia</strong>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {/* ─── Stats grid ─── */}
             <div className="grid grid-3 mb-4" style={{ gap: '0.75rem' }}>
                 <div className="stat-card">
                     <div className="stat-label"><Activity size={12} style={{ display: 'inline', marginRight: 4 }} />Sono Hoje</div>
-                    <div className="stat-value" style={{ color: health.sleep >= 8 ? 'var(--success)' : health.sleep >= 6 ? 'var(--warning)' : 'var(--danger)' }}>
-                        {health.sleep || 0}h
+                    <div className="stat-value" style={{ color: todaySleep >= 8 ? 'var(--success)' : todaySleep >= 6 ? 'var(--warning)' : 'var(--danger)' }}>
+                        {todaySleep}h
                     </div>
-                    <div className="stat-sub">{health.sleep >= 8 ? 'Excelente!' : health.sleep >= 6 ? 'Atenção ao sono' : 'Durma mais!'}</div>
+                    <div className="stat-sub">{todaySleep >= 8 ? 'Excelente!' : todaySleep >= 6 ? 'Atenção ao sono' : 'Durma mais!'}</div>
                 </div>
 
                 <div className="stat-card">
