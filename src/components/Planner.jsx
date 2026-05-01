@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Flame, RefreshCw, Download } from 'lucide-react';
 import html2canvas from 'html2canvas';
-import { useLocalStorage } from '../hooks/useLocalStorage';
+import { useFirebaseData } from '../hooks/useFirebaseData';
 
 const DAYS = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
 
@@ -16,7 +16,7 @@ const rand = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
 export const Planner = () => {
     const plannerRef = useRef(null);
-    const [planner, setPlanner] = useLocalStorage('study_planner', () =>
+    const [planner, setPlanner] = useFirebaseData('study_planner', () =>
         DAYS.reduce((acc, day) => ({ ...acc, [day]: '' }), {})
     );
     const [isExporting, setIsExporting] = useState(false);

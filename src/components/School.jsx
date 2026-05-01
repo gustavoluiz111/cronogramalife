@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Calculator, BookOpen, Settings, Check, X, Plus } from 'lucide-react';
-import { useLocalStorage } from '../hooks/useLocalStorage';
+import { Calculator, BookOpen, Settings, Check, X, Plus, Download } from 'lucide-react';
+import { useFirebaseData } from '../hooks/useFirebaseData';
+import html2canvas from 'html2canvas';
 
 const DEFAULT_SUBJECTS = [
     'Matematica', 'Portugues', 'Biologia', 'Historia', 'Quimica',
@@ -48,9 +49,9 @@ const makeDefaultGrades = (subjects) =>
     }), {});
 
 export const School = () => {
-    const [schedule, setSchedule] = useLocalStorage('school_sched_mul', DEFAULT_SCHEDULE);
-    const [subjects, setSubjects] = useLocalStorage('school_subj_mul', DEFAULT_SUBJECTS);
-    const [grades, setGrades]     = useLocalStorage('school_gr_mul_v4', null);
+    const [schedule, setSchedule] = useFirebaseData('school_sched_mul', DEFAULT_SCHEDULE);
+    const [subjects, setSubjects] = useFirebaseData('school_subj_mul', DEFAULT_SUBJECTS);
+    const [grades, setGrades]     = useFirebaseData('school_gr_mul_v4', null);
 
     const activeGrades = grades || makeDefaultGrades(subjects);
 
@@ -59,6 +60,7 @@ export const School = () => {
     const [localSched, setLocalSched]           = useState(null);
     const [configModal, setConfigModal]         = useState(null);
     const [activeTri, setActiveTri]             = useState(0); // 0, 1, 2 = 1º, 2º, 3º Trimestre
+    const [showReport, setShowReport]           = useState(false);
 
     // Helpers
     const getGradeData = (sub) => {
@@ -208,6 +210,22 @@ export const School = () => {
         }));
     };
 
+    const exportReportCard = async () => {
+        const el = document.getElementById('report-card-capture');
+        if (!el) return;
+        try {
+            const canvas = await html2canvas(el, { backgroundColor: '#101825', scale: 2 });
+            const imgData = canvas.toDataURL('image/jpeg', 0.9);
+            const link = document.createElement('a');
+            link.download = 'boletim_escolar.jpg';
+            link.href = imgData;
+            link.click();
+        } catch(e) {
+            console.error('Falha ao exportar boletim', e);
+            alert('Erro ao gerar a imagem do boletim.');
+        }
+    };
+
     return (
         <div className="animate-fade">
             <h1 className="page-title">Escola</h1>
@@ -243,6 +261,9 @@ export const School = () => {
                     </div>
 
                     <div className="flex gap-2">
+                        <button className="btn btn-outline btn-sm" onClick={() => setShowReport(true)} title="Gerar Boletim Escolar (JPEG)">
+                            <Download size={14} /> Boletim
+                        </button>
                         <input
                             type="text"
                             placeholder="Nova matéria..."
@@ -516,6 +537,110 @@ export const School = () => {
                         <button className="btn btn-primary" style={{ width: '100%', marginTop: '1.5rem' }} onClick={() => setConfigModal(null)}>
                             Salvar Regras
                         </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Boletim Modal */}
+            {showReport && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999,
+                    background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    padding: '1rem'
+                }}>
+                    <div className="animate-fade" style={{ maxWidth: 800, width: '100%', maxHeight: '95vh', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        <div className="flex items-center justify-between">
+                            <h2 style={{color: 'white', margin: 0}}>Boletim Escolar</h2>
+                            <div className="flex gap-2">
+                                <button className="btn btn-success" onClick={exportReportCard}>
+                                    <Download size={18} /> Baixar JPEG
+                                </button>
+                                <button className="btn btn-ghost" onClick={() => setShowReport(false)} style={{color: 'white'}}>
+                                    <X size={24} />
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div style={{ overflow: 'auto', background: 'var(--bg-card)', borderRadius: '16px', boxShadow: 'var(--card-shadow)' }}>
+                            <div id="report-card-capture" style={{
+                                background: '#101825',
+                                color: '#eef2ff',
+                                padding: '2.5rem',
+                                fontFamily: 'Inter, system-ui, sans-serif'
+                            }}>
+                                <div style={{ textAlign: 'center', marginBottom: '2rem', borderBottom: '2px solid rgba(255,255,255,0.05)', paddingBottom: '1.5rem' }}>
+                                    <h1 style={{ fontSize: '2.2rem', margin: 0, background: 'linear-gradient(135deg, #7eb3ff, #9b59ff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                                        Boletim Escolar
+                                    </h1>
+                                    <p style={{ margin: '0.5rem 0 0 0', color: '#8b9fc4', fontSize: '1.1rem' }}>Desempenho Anual - Notas e Médias</p>
+                                </div>
+
+                                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.95rem' }}>
+                                    <thead>
+                                        <tr style={{ borderBottom: '2px solid rgba(79, 142, 247, 0.3)' }}>
+                                            <th style={{ padding: '1rem', color: '#8b9fc4' }}>Disciplina</th>
+                                            <th style={{ padding: '1rem', textAlign: 'center', color: '#8b9fc4' }}>1º Tri</th>
+                                            <th style={{ padding: '1rem', textAlign: 'center', color: '#8b9fc4' }}>2º Tri</th>
+                                            <th style={{ padding: '1rem', textAlign: 'center', color: '#8b9fc4' }}>3º Tri</th>
+                                            <th style={{ padding: '1rem', textAlign: 'center', color: '#8b9fc4' }}>Média Anual</th>
+                                            <th style={{ padding: '1rem', textAlign: 'center', color: '#8b9fc4' }}>Situação</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {(subjects || DEFAULT_SUBJECTS).map((sub, i) => {
+                                            const m1 = calcMediaTri(sub, 0);
+                                            const m2 = calcMediaTri(sub, 1);
+                                            const m3 = calcMediaTri(sub, 2);
+                                            const yearly = calcYearlyMedia(sub);
+                                            const status = getStatus(sub);
+                                            
+                                            // Get matching hex colors to ensure html2canvas paints correctly
+                                            const statusColors = {
+                                                success: '#10b981',
+                                                warning: '#f59e0b',
+                                                danger: '#ef4444'
+                                            };
+                                            const badgeBg = {
+                                                success: 'rgba(16, 185, 129, 0.15)',
+                                                warning: 'rgba(245, 158, 11, 0.15)',
+                                                danger: 'rgba(239, 68, 68, 0.15)'
+                                            };
+                                            
+                                            const sColor = statusColors[status.cls] || '#fff';
+                                            const sBg = badgeBg[status.cls] || 'transparent';
+                                            
+                                            return (
+                                                <tr key={sub} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', backgroundColor: i % 2 === 0 ? 'rgba(255,255,255,0.015)' : 'transparent' }}>
+                                                    <td style={{ padding: '1rem', fontWeight: '600' }}>{sub}</td>
+                                                    <td style={{ padding: '1rem', textAlign: 'center' }}>{m1}</td>
+                                                    <td style={{ padding: '1rem', textAlign: 'center' }}>{m2}</td>
+                                                    <td style={{ padding: '1rem', textAlign: 'center' }}>{m3}</td>
+                                                    <td style={{ padding: '1rem', textAlign: 'center', fontWeight: 'bold', color: sColor }}>{yearly}</td>
+                                                    <td style={{ padding: '1rem', textAlign: 'center' }}>
+                                                        <span style={{
+                                                            padding: '0.4rem 0.8rem',
+                                                            borderRadius: '999px',
+                                                            fontSize: '0.8rem',
+                                                            backgroundColor: sBg,
+                                                            color: sColor,
+                                                            fontWeight: 'bold',
+                                                            border: `1px solid ${sColor}40`
+                                                        }}>
+                                                            {status.text}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                                
+                                <div style={{ marginTop: '2.5rem', textAlign: 'center', color: '#536077', fontSize: '0.8rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1rem' }}>
+                                    Gerado por CronogramaLife • {new Date().toLocaleDateString('pt-BR')}
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}

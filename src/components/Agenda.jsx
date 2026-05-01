@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ClipboardList, Calendar, BookOpen, Award, CheckSquare, Plus, Trash2, Check, RotateCcw, MapPin, Edit2 } from 'lucide-react';
-import { useLocalStorage } from '../hooks/useLocalStorage';
+import { useFirebaseData } from '../hooks/useFirebaseData';
 
 const TABS = [
     { id: 'events',  label: 'Provas & Eventos',    icon: Calendar },
@@ -33,7 +33,7 @@ const daysDiff = (dateStr) => {
 
 // ─── Events Tab ────────────────────────────────────────────────────────────
 const EventsTab = () => {
-    const [events, setEvents] = useLocalStorage('agenda_events', []);
+    const [events, setEvents] = useFirebaseData('agenda_events', []);
     const [showForm, setShowForm] = useState(false);
     const [form, setForm] = useState({ name: '', type: 'somatório', category: '', date: '', notes: '' });
     const [editingId, setEditingId] = useState(null);
@@ -195,7 +195,7 @@ const EventsTab = () => {
 
 // ─── Topics Tab ────────────────────────────────────────────────────────────
 const TopicsTab = () => {
-    const [topics, setTopics] = useLocalStorage('agenda_topics', []);
+    const [topics, setTopics] = useFirebaseData('agenda_topics', []);
     const [showForm, setShowForm] = useState(false);
     const [form, setForm] = useState({ name: '', subject: '', priority: 'Alta' });
     const [editingId, setEditingId] = useState(null);
@@ -308,7 +308,8 @@ const TopicsTab = () => {
 
 // ─── Certificates Tab ──────────────────────────────────────────────────────
 const CertsTab = () => {
-    const [certs, setCerts] = useLocalStorage('agenda_certs', []);
+    const [certs, setCerts] = useFirebaseData('agenda_certs', []);
+    const [certsInjected, setCertsInjected, certsInjectedLoading] = useFirebaseData('certs_bradesco_injected', false);
     const [showForm, setShowForm] = useState(false);
     const [form, setForm] = useState({ name: '', institution: '', date: '', area: '' });
     const [editingId, setEditingId] = useState(null);
@@ -316,8 +317,8 @@ const CertsTab = () => {
     const AREAS = ['Tecnologia', 'Programação', 'IA / Dados', 'Inglês', 'Saúde', 'Redação', 'Marketing', 'Outro'];
 
     React.useEffect(() => {
-        const injected = localStorage.getItem('certs_bradesco_injected');
-        if (!injected) {
+        if (certsInjectedLoading) return;
+        if (!certsInjected) {
             const bradescoCerts = [
                 { id: Date.now() + 1, name: 'Word - Básico', institution: 'Bradesco', date: '', area: 'Tecnologia' },
                 { id: Date.now() + 2, name: 'Word - Intermediário', institution: 'Bradesco', date: '', area: 'Tecnologia' },
@@ -335,10 +336,10 @@ const CertsTab = () => {
                     if (exists) return prev;
                     return [...prev, ...bradescoCerts];
                 });
-                localStorage.setItem('certs_bradesco_injected', 'true');
+                setCertsInjected(true);
             }, 1500);
         }
-    }, []);
+    }, [certsInjected, certsInjectedLoading, setCerts, setCertsInjected]);
 
     const handleFormClose = () => {
         setShowForm(false);
@@ -446,7 +447,7 @@ const CertsTab = () => {
 
 // ─── Todo Tab ──────────────────────────────────────────────────────────────
 const TodoTab = () => {
-    const [items, setItems] = useLocalStorage('agenda_todo', []);
+    const [items, setItems] = useFirebaseData('agenda_todo', []);
     const [input, setInput] = useState('');
     const [category, setCategory] = useState('Escola');
     const [editingId, setEditingId] = useState(null);

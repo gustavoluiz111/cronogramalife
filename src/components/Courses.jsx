@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { BookOpen, Video, MapPin, Code, ExternalLink, Edit3, Plus, Trash2, TrendingUp, Layout as LayoutIcon } from 'lucide-react';
-import { useLocalStorage } from '../hooks/useLocalStorage';
+import { useFirebaseData } from '../hooks/useFirebaseData';
 
 // ─── Ferreto Data ───
 const FERRETO_WEEKS = [
@@ -15,7 +15,7 @@ const TECH_COURSES = [
 
 // ─── REDAÇÃO MANAGER ───
 const RedacaoManager = () => {
-    const [redacoes, setRedacoes] = useLocalStorage('agenda_redacoes', []);
+    const [redacoes, setRedacoes] = useFirebaseData('agenda_redacoes', []);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [form, setForm] = useState({ tema: '', status: 'pendente', nota: '', introducao: '' });
 
@@ -177,7 +177,7 @@ const RedacaoManager = () => {
 
 
 export const Courses = () => {
-    const [ferretoData, setFerretoData] = useLocalStorage('ferreto_progress', () =>
+    const [ferretoData, setFerretoData] = useFirebaseData('ferreto_progress', () =>
         FERRETO_WEEKS.map(w => ({ ...w, current: 0 }))
     );
 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Target, TrendingUp, GraduationCap, DollarSign, BookOpen, ChevronDown, ChevronUp } from 'lucide-react';
-import { useLocalStorage } from '../hooks/useLocalStorage';
+import { useFirebaseData } from '../hooks/useFirebaseData';
 
 // ─── Perfil do Estudante ───────────────────────────────────────────────────
 // Pernambuco | Escola pública desde 5º ano | Baixa renda
@@ -58,7 +58,7 @@ const PROUNI_DATA = [
 
 // ─── Score Simulator ────────────────────────────────────────────────────────
 const ScoreSimulator = () => {
-    const [scores, setScores] = useLocalStorage('enem_simulator', {
+    const [scores, setScores] = useFirebaseData('enem_simulator', {
         ch: 0, cn: 0, lc: 0, mt: 0, redacao: 0,
     });
 
@@ -122,12 +122,12 @@ const ScoreSimulator = () => {
 
 // ─── Main Goals Component ──────────────────────────────────────────────────
 export const Goals = () => {
-    const [goals, setGoals] = useLocalStorage('goals_v3', DEFAULT_GOALS);
-    const [notes, setNotes] = useLocalStorage('goal_notes_v3', {});
+    const [goals, setGoals] = useFirebaseData('goals_v3', DEFAULT_GOALS);
+    const [notes, setNotes] = useFirebaseData('goal_notes_v3', {});
     const [showSisu, setShowSisu] = useState(true);
     const [showProuni, setShowProuni] = useState(true);
     const [showFies, setShowFies] = useState(false);
-    const [scores] = useLocalStorage('enem_simulator', { ch: 0, cn: 0, lc: 0, mt: 0, redacao: 0 });
+    const [scores] = useFirebaseData('enem_simulator', { ch: 0, cn: 0, lc: 0, mt: 0, redacao: 0 });
 
     const myScore = () => {
         const { ch, cn, lc, mt } = scores;

@@ -7,7 +7,7 @@ const getLocalDateString = (d = new Date()) => {
     const dd = String(d.getDate()).padStart(2, '0');
     return `${yyyy}-${mm}-${dd}`;
 };
-import { useLocalStorage } from '../hooks/useLocalStorage';
+import { useFirebaseData } from '../hooks/useFirebaseData';
 import { useAuth } from '../contexts/AuthContext';
 
 // ─── ENEM Countdown ─────────────────────────────────────────────────────────
@@ -26,18 +26,19 @@ const Pomodoro = () => {
     const [seconds, setSeconds]   = useState(WORK);
     const [running, setRunning]   = useState(false);
     const [isWork, setIsWork]     = useState(true);
-    const [sessions, setSessions] = useLocalStorage('pomodoro_sessions_today', 0);
+    const [sessions, setSessions] = useFirebaseData('pomodoro_sessions_today', 0);
+    const [pomodoroDate, setPomodoroDate, pomodoroDateLoading] = useFirebaseData('pomodoro_date', new Date().toDateString());
     const intervalRef             = useRef(null);
 
     // Reset sessions daily
     useEffect(() => {
         const today = new Date().toDateString();
-        const saved = localStorage.getItem('pomodoro_date');
-        if (saved !== today) {
+        if (pomodoroDateLoading) return;
+        if (pomodoroDate !== today) {
             setSessions(0);
-            localStorage.setItem('pomodoro_date', today);
+            setPomodoroDate(today);
         }
-    }, []);
+    }, [pomodoroDate, pomodoroDateLoading, setSessions, setPomodoroDate]);
 
     useEffect(() => {
         if (running) {
@@ -119,10 +120,10 @@ const Pomodoro = () => {
 // ─── Dashboard ───────────────────────────────────────────────────────────────
 export const Dashboard = () => {
     const { userProfile } = useAuth();
-    const [healthHistory] = useLocalStorage('health_history', {});
-    const [ferreto] = useLocalStorage('ferreto_progress', []);
-    const [grades]  = useLocalStorage('school_grades_v3', {});
-    const [config]  = useLocalStorage('school_config_v2', { passingGrade: 5, numSomatórios: 2, somatórioMax: [8, 8], hasSimulado: true, simuladoMax: 4, divideBy: 2 });
+    const [healthHistory] = useFirebaseData('health_history', {});
+    const [ferreto] = useFirebaseData('ferreto_progress', []);
+    const [grades]  = useFirebaseData('school_grades_v3', {});
+    const [config]  = useFirebaseData('school_config_v2', { passingGrade: 5, numSomatórios: 2, somatórioMax: [8, 8], hasSimulado: true, simuladoMax: 4, divideBy: 2 });
 
     const enemDays = getEnemDays();
     const firstName = (userProfile?.nome || 'Estudante').split(' ')[0];

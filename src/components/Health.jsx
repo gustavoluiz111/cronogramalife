@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Heart, Moon, Zap, Activity, CalendarDays, ChevronLeft, ChevronRight, TrendingUp } from 'lucide-react';
-import { useLocalStorage } from '../hooks/useLocalStorage';
+import { useFirebaseData } from '../hooks/useFirebaseData';
 
 const getLocalDateString = (d = new Date()) => {
     // Returns YYYY-MM-DD in local time
@@ -17,7 +17,7 @@ const getDisplayDate = (dateStr) => {
 
 export const Health = () => {
     // history in format: { "YYYY-MM-DD": { sleep: 8, workout: true } }
-    const [history, setHistory] = useLocalStorage('health_history', {});
+    const [history, setHistory] = useFirebaseData('health_history', {});
 
     const todayStr = getLocalDateString();
     
