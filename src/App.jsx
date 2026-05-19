@@ -11,6 +11,7 @@ import { CalendarView } from './components/CalendarView';
 import { Agenda } from './components/Agenda';
 import { AuthScreen } from './components/AuthScreen';
 import { AiAssistant } from './components/AiAssistant';
+import { Checklists } from './components/Checklists';
 import { useAuth } from './contexts/AuthContext';
 
 function App() {
@@ -31,6 +32,7 @@ function App() {
             case 'calendar':  return <CalendarView />;
             case 'health':    return <Health />;
             case 'goals':     return <Goals />;
+            case 'checklists':return <Checklists />;
             case 'ai':        return <AiAssistant />;
             default:          return <Dashboard />;
         }

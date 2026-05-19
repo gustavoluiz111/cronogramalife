@@ -55,6 +55,46 @@ export const School = () => {
 
     const activeGrades = grades || makeDefaultGrades(subjects);
 
+    const [gradesSynced, setGradesSynced] = useState(false);
+    React.useEffect(() => {
+        if (!grades || gradesSynced) return;
+        const target = {
+            'Artes': 9.0, 'Biologia': 6.5, 'Ed. Fisica': 10.0, 'Filosofia': 7.0,
+            'Fisica': 6.5, 'Geografia': 7.0, 'Historia': 8.5, 'Ingles': 6.5,
+            'Portugues': 7.5, 'Matematica': 4.5, 'Quimica': 6.5, 'Sociologia': 6.0
+        };
+
+        const distribute = (media) => {
+            let remain = media * 2;
+            let som1 = Math.min(remain, 5);
+            remain -= som1;
+            let som2 = Math.min(remain, 5);
+            remain -= som2;
+            return { soms: [som1, som2], sim: remain };
+        };
+
+        let updated = false;
+        const newGrades = JSON.parse(JSON.stringify(grades));
+
+        Object.keys(target).forEach(sub => {
+            if (newGrades[sub] && !newGrades[sub]._syncT1) {
+                // Keep the existing config and modify the first trimester
+                if (!newGrades[sub].trimesters) {
+                    newGrades[sub].trimesters = [{soms:[0,0], simulado:0}, {soms:[0,0], simulado:0}, {soms:[0,0], simulado:0}];
+                }
+                const dist = distribute(target[sub]);
+                newGrades[sub].trimesters[0] = { soms: dist.soms, simulado: dist.sim };
+                newGrades[sub]._syncT1 = true;
+                updated = true;
+            }
+        });
+
+        if (updated) {
+            setGrades(newGrades);
+        }
+        setGradesSynced(true);
+    }, [grades, gradesSynced, setGrades]);
+
     const [editingSchedule, setEditingSchedule] = useState(false);
     const [newSubject, setNewSubject]           = useState('');
     const [localSched, setLocalSched]           = useState(null);

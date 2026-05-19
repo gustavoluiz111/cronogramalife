@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Clock, Book, Activity, Zap, Play, Pause, RotateCcw, TrendingUp, Calendar, Bell } from 'lucide-react';
+import { Clock, Book, Activity, Zap, Play, Pause, RotateCcw, TrendingUp, Calendar, Bell, CheckSquare } from 'lucide-react';
 
 const getLocalDateString = (d = new Date()) => {
     const yyyy = d.getFullYear();
@@ -187,59 +187,18 @@ export const Dashboard = () => {
                 </div>
             </div>
 
-            {/* ─── Avisos Simulados ─── */}
-            <div className="card mb-4" style={{ border: '1px solid rgba(255, 215, 0, 0.2)', position: 'relative', overflow: 'hidden' }}>
-                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '4px', background: 'linear-gradient(90deg, #ffd700, #ff8c00)' }} />
-                <h3 className="section-title mb-4" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ffd700' }}>
-                    <Bell size={20} /> Avisos e Horários de Simulados
-                </h3>
-                <div className="grid grid-3" style={{ gap: '1rem' }}>
-                    <div className="card" style={{ background: 'rgba(255,255,255,0.02)', padding: '1.25rem', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
-                            <Calendar size={16} className="text-muted" /> <span className="font-bold" style={{ fontSize: '1.1rem' }}>27/04</span>
-                        </div>
-                        <div className="text-sm">
-                            <p className="mb-2">
-                                <span className="text-muted" style={{ fontSize: '0.75rem' }}>07:40 – 09:40</span><br/>
-                                <strong>História, Física</strong>
-                            </p>
-                            <p>
-                                <span className="text-muted" style={{ fontSize: '0.75rem' }}>10:00 – 12:00</span><br/>
-                                <strong>Português, Artes</strong>
-                            </p>
-                        </div>
+            {/* ─── Checklists Shortcut ─── */}
+            <div className="card mb-4" style={{ border: '1px solid rgba(124, 106, 255, 0.2)', position: 'relative', overflow: 'hidden' }}>
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '4px', background: 'linear-gradient(90deg, var(--accent), var(--success))' }} />
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+                    <div>
+                        <h3 className="section-title mb-1" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--accent)' }}>
+                            <CheckSquare size={20} /> Checklists de Estudos
+                        </h3>
+                        <p className="text-muted text-sm">Acompanhe todos os tópicos do edital para o SSA 3 e ENEM.</p>
                     </div>
-                    
-                    <div className="card" style={{ background: 'rgba(255,255,255,0.02)', padding: '1.25rem', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
-                            <Calendar size={16} className="text-muted" /> <span className="font-bold" style={{ fontSize: '1.1rem' }}>29/04</span>
-                        </div>
-                        <div className="text-sm">
-                            <p className="mb-2">
-                                <span className="text-muted" style={{ fontSize: '0.75rem' }}>07:40 – 09:40</span><br/>
-                                <strong>Biologia, Filosofia</strong>
-                            </p>
-                            <p>
-                                <span className="text-muted" style={{ fontSize: '0.75rem' }}>10:00 – 12:00</span><br/>
-                                <strong>Química, Inglês</strong>
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="card" style={{ background: 'rgba(255,255,255,0.02)', padding: '1.25rem', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
-                            <Calendar size={16} className="text-muted" /> <span className="font-bold" style={{ fontSize: '1.1rem' }}>04/05</span>
-                        </div>
-                        <div className="text-sm">
-                            <p className="mb-2">
-                                <span className="text-muted" style={{ fontSize: '0.75rem' }}>07:40 – 09:40</span><br/>
-                                <strong>Educação Física, Matemática</strong>
-                            </p>
-                            <p>
-                                <span className="text-muted" style={{ fontSize: '0.75rem' }}>10:00 – 12:00</span><br/>
-                                <strong>Geografia, Sociologia</strong>
-                            </p>
-                        </div>
+                    <div className="text-sm font-mono text-muted">
+                        Acesse a nova aba "Checklists" no menu lateral para continuar.
                     </div>
                 </div>
             </div>

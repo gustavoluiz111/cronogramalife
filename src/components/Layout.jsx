@@ -1,4 +1,4 @@
-import { Home, School, BookOpen, Calendar, Heart, Award, ClipboardList, Flame, MessageSquare } from 'lucide-react';
+import { Home, School, BookOpen, Calendar, Heart, Award, ClipboardList, Flame, MessageSquare, CheckSquare } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import LaserFlow from './LaserFlow';
 import { StaggeredMenu } from './StaggeredMenu';
@@ -6,6 +6,7 @@ import { StaggeredMenu } from './StaggeredMenu';
 const tabs = [
     { id: 'dashboard', label: 'Dashboard',   icon: Home,          group: 'Principal' },
     { id: 'school',    label: 'Escola',       icon: School,        group: 'Acadêmico' },
+    { id: 'checklists',label: 'Checklists',   icon: CheckSquare,   group: 'Acadêmico' },
     { id: 'courses',   label: 'Cursos',       icon: BookOpen,      group: 'Acadêmico' },
     { id: 'agenda',    label: 'Agenda',       icon: ClipboardList, group: 'Acadêmico' },
     { id: 'ai',        label: 'Mentoria IA',  icon: MessageSquare, group: 'Acadêmico' },
