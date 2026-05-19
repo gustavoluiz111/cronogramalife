@@ -51,13 +51,13 @@ const makeDefaultGrades = (subjects) =>
 export const School = () => {
     const [schedule, setSchedule] = useFirebaseData('school_sched_mul', DEFAULT_SCHEDULE);
     const [subjects, setSubjects] = useFirebaseData('school_subj_mul', DEFAULT_SUBJECTS);
-    const [grades, setGrades]     = useFirebaseData('school_gr_mul_v4', null);
+    const [grades, setGrades, gradesLoading] = useFirebaseData('school_gr_mul_v4', null);
 
     const activeGrades = grades || makeDefaultGrades(subjects);
 
     const [gradesSynced, setGradesSynced] = useState(false);
     React.useEffect(() => {
-        if (!grades || gradesSynced) return;
+        if (gradesLoading || gradesSynced) return;
         const target = {
             'Artes': 9.0, 'Biologia': 6.5, 'Ed. Fisica': 10.0, 'Filosofia': 7.0,
             'Fisica': 6.5, 'Geografia': 7.0, 'Historia': 8.5, 'Ingles': 6.5,
@@ -74,7 +74,8 @@ export const School = () => {
         };
 
         let updated = false;
-        const newGrades = JSON.parse(JSON.stringify(grades));
+        const currentGrades = grades || makeDefaultGrades(subjects);
+        const newGrades = JSON.parse(JSON.stringify(currentGrades));
 
         Object.keys(target).forEach(sub => {
             if (newGrades[sub] && !newGrades[sub]._syncT1) {
@@ -93,7 +94,7 @@ export const School = () => {
             setGrades(newGrades);
         }
         setGradesSynced(true);
-    }, [grades, gradesSynced, setGrades]);
+    }, [grades, gradesLoading, gradesSynced, setGrades, subjects]);
 
     const [editingSchedule, setEditingSchedule] = useState(false);
     const [newSubject, setNewSubject]           = useState('');
